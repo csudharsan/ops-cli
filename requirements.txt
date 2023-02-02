@@ -17,3 +17,4 @@ kubernetes==18.20.0
 himl==0.7.3
 six
 GitPython==3.1.*
+markupsafe==2.0.1
