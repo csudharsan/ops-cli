@@ -79,7 +79,6 @@ class SimpleVault(object):
             else:
                 self.vault_conn = hvac.Client(
                     url=self.vault_addr,
-                    namespace=self.namespace,
                     token=self.vault_token)
 
         while not self.vault_conn.is_authenticated() and auto_prompt:
@@ -117,18 +116,20 @@ class SimpleVault(object):
             fetch_all = True
         if fetch_all:
             key = None
-        raw_data = self.vault_conn.secrets.kv.v2.read_secret_version(
-            path=path, mount_point=self.mount_point)
+#         raw_data = self.vault_conn.secrets.kv.v2.read_secret_version(
+#             path=path, mount_point=self.mount_point)
+        raw_data = self.vault_conn.read(path, wrap_ttl=wrap_ttl) or {}
+      
         # move this check earlier, and, if true, return immediately
         if raw:
             return raw_data
-        data = raw_data.get('data')
+        data = raw_data.get('data') or {}
         if isinstance(data, dict):
             if not fetch_all:
                 if key:
                     # the actual secret k v pairs are nested under another
                     # dictionary key "data"
-                    return data.get("data").get(key, default)
+                    return data.get('data') or {}
                 else:
                     raise('VAULT-LIB: either key or fetch_all should be set!')
 
@@ -156,8 +157,10 @@ class SimpleVault(object):
                 payload[k] = str(v)
         else:
             raise Exception('Unsupported data type for secret payload')
-        self.vault_conn.secrets.kv.v2.create_or_update_secret(
-            path=path, secret=payload, mount_point=self.mount_point)
+#         self.vault_conn.secrets.kv.v2.create_or_update_secret(
+#             path=path, secret=payload, mount_point=self.mount_point)
+        self.vault_conn.write(path, wrap_ttl, **payload)
+          
 
     def is_authenticated(self):
         return self.vault_conn.is_authenticated()
