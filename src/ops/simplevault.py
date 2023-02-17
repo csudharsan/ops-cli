@@ -159,7 +159,7 @@ class SimpleVault(object):
             raise Exception('Unsupported data type for secret payload')
 #         self.vault_conn.secrets.kv.v2.create_or_update_secret(
 #             path=path, secret=payload, mount_point=self.mount_point)
-          self.vault_conn.write(path, wrap_ttl, **payload)
+            self.vault_conn.write(path, wrap_ttl, **payload)
 
     def is_authenticated(self):
         return self.vault_conn.is_authenticated()
