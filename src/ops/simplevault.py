@@ -119,17 +119,17 @@ class SimpleVault(object):
 #         raw_data = self.vault_conn.secrets.kv.v2.read_secret_version(
 #             path=path, mount_point=self.mount_point)
         raw_data = self.vault_conn.read(path, wrap_ttl=wrap_ttl) or {}
-      
+        
         # move this check earlier, and, if true, return immediately
         if raw:
             return raw_data
-        data = raw_data.get('data') or {}
+        data = raw_data.get('data')
         if isinstance(data, dict):
             if not fetch_all:
                 if key:
                     # the actual secret k v pairs are nested under another
                     # dictionary key "data"
-                    return data.get('data') or {}
+                    return data.get(key, default)
                 else:
                     raise('VAULT-LIB: either key or fetch_all should be set!')
 
@@ -159,8 +159,7 @@ class SimpleVault(object):
             raise Exception('Unsupported data type for secret payload')
 #         self.vault_conn.secrets.kv.v2.create_or_update_secret(
 #             path=path, secret=payload, mount_point=self.mount_point)
-        self.vault_conn.write(path, wrap_ttl, **payload)
-          
+            self.vault_conn.write(path, wrap_ttl, **payload)
 
     def is_authenticated(self):
         return self.vault_conn.is_authenticated()
@@ -201,8 +200,7 @@ class ManagedVaultSecret(object):
         else:
             try:
                 self.sv = SimpleVault(
-                    vault_user=None, vault_addr=None, vault_token=None, auto_prompt=True,
-                    namespace=self.namespace, mount_point=self.mount_point)
+                    vault_user=None, vault_addr=None, vault_token=None, auto_prompt=True)
                 ManagedVaultSecret.p_sv = self.sv
             except Exception as e:
                 display(
